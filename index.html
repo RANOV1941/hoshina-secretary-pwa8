@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="秘書">
+<meta name="theme-color" content="#08010f">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<title>秘書 — KIHITO</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Noto+Sans+JP:wght@300;400;500&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:      #08010f;
+  --sur:     rgba(255,255,255,0.04);
+  --sur2:    rgba(255,255,255,0.08);
+  --bdr:     rgba(180,100,255,0.18);
+  --bdr2:    rgba(180,100,255,0.36);
+  --txt:     #ede8f5;
+  --txt2:    #9b8cb0;
+  --txt3:    #5a4f6a;
+  --mg:      #ff2d9b;
+  --cy:      #00f5ff;
+  --pu:      #b46fff;
+  --pu2:     #7b3fa0;
+  --gm:      0 0 10px rgba(255,45,155,0.6);
+  --gc:      0 0 10px rgba(0,245,255,0.5);
+  --gp:      0 0 14px rgba(180,111,255,0.5);
+  --r:       12px;
+  --rs:      7px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:var(--bg);color:var(--txt);font-family:'Noto Sans JP',sans-serif;overflow:hidden}
+body::before{content:'';position:fixed;inset:0;z-index:0;
+  background:linear-gradient(rgba(180,111,255,0.04) 1px,transparent 1px),
+             linear-gradient(90deg,rgba(180,111,255,0.04) 1px,transparent 1px);
+  background-size:40px 40px;pointer-events:none}
+body::after{content:'';position:fixed;left:0;right:0;bottom:0;height:35vh;z-index:0;
+  background:linear-gradient(to top,rgba(255,45,155,0.08),rgba(180,111,255,0.05) 40%,transparent);
+  pointer-events:none}
+
+.app{display:flex;flex-direction:column;height:100vh;height:100dvh;position:relative;z-index:1}
+.statusbar{height:env(safe-area-inset-top,0px)}
+
+/* HEADER */
+.header{padding:12px 20px 8px;flex-shrink:0}
+.header-top{display:flex;align-items:center;justify-content:space-between}
+.app-title{font-family:'Rajdhani',sans-serif;font-size:34px;font-weight:700;letter-spacing:6px;
+  background:linear-gradient(90deg,var(--cy),var(--pu) 50%,var(--mg));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  filter:drop-shadow(0 0 8px rgba(180,111,255,0.7));line-height:1}
+.date-disp{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--cy);
+  letter-spacing:1px;text-align:right;line-height:1.7;text-shadow:var(--gc)}
+
+/* SUMMARY */
+.sumbar{display:flex;gap:8px;padding:6px 20px 10px;flex-shrink:0}
+.sumpill{flex:1;background:var(--sur);border:0.5px solid var(--bdr);border-radius:50px;
+  padding:7px 10px;text-align:center;position:relative;overflow:hidden}
+.sumpill::before{content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(180,111,255,0.06),transparent 60%)}
+.sumpill .val{font-family:'Rajdhani',sans-serif;font-size:20px;font-weight:700;
+  color:var(--cy);text-shadow:var(--gc);line-height:1}
+.sumpill .lbl{font-size:10px;color:var(--txt2);margin-top:1px}
+.sumpill.d .val{color:var(--mg);text-shadow:var(--gm)}
+.sumpill.p .val{color:var(--pu);text-shadow:var(--gp)}
+
+/* TABS */
+.tabs{display:flex;padding:0 20px;border-bottom:0.5px solid var(--bdr);flex-shrink:0}
+.tbtn{flex:1;padding:9px 0;font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:600;
+  letter-spacing:1.5px;color:var(--txt3);background:none;border:none;cursor:pointer;
+  position:relative;transition:color 0.2s;text-transform:uppercase}
+.tbtn.on{color:var(--cy);text-shadow:var(--gc)}
+.tbtn.on::after{content:'';position:absolute;bottom:-0.5px;left:15%;right:15%;height:1.5px;
+  background:linear-gradient(90deg,transparent,var(--cy),transparent);box-shadow:var(--gc)}
+
+/* CONTENT */
+.content{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 20px}
+.sec{display:none}.sec.on{display:block}
+
+/* FORMS */
+.add-form{background:var(--sur);border:0.5px solid var(--bdr);border-radius:var(--r);
+  padding:12px;margin-bottom:12px;position:relative;overflow:hidden}
+.add-form::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,var(--pu),transparent)}
+input[type=text],input[type=date],input[type=time],select{
+  background:rgba(0,0,0,0.35);border:0.5px solid var(--bdr2);border-radius:var(--rs);
+  color:var(--txt);font-family:'Noto Sans JP',sans-serif;font-size:14px;
+  padding:9px 11px;outline:none;width:100%;transition:border-color 0.2s,box-shadow 0.2s}
+input:focus,select:focus{border-color:var(--cy);box-shadow:0 0 0 2px rgba(0,245,255,0.1)}
+input[type=date],input[type=time]{color-scheme:dark}
+select{appearance:none}
+.frow{display:flex;gap:7px;margin-bottom:7px}.frow:last-child{margin-bottom:0}
+.abtn{background:linear-gradient(135deg,var(--pu2),var(--mg));color:#fff;border:none;
+  border-radius:var(--rs);padding:9px 14px;font-family:'Rajdhani',sans-serif;font-size:14px;
+  font-weight:700;letter-spacing:1px;cursor:pointer;white-space:nowrap;
+  box-shadow:0 0 12px rgba(255,45,155,0.35);text-transform:uppercase;transition:opacity 0.15s}
+.abtn:active{opacity:0.75}
+
+/* SORT BAR */
+.sortbar{display:flex;align-items:center;gap:6px;margin-bottom:10px;flex-wrap:wrap}
+.slbl{font-size:11px;color:var(--txt3);font-family:'Share Tech Mono',monospace;letter-spacing:0.5px}
+.sbtn{font-family:'Rajdhani',sans-serif;font-size:12px;font-weight:600;letter-spacing:0.5px;
+  padding:3px 10px;border-radius:50px;border:0.5px solid var(--bdr);
+  background:none;color:var(--txt2);cursor:pointer;transition:all 0.15s;text-transform:uppercase}
+.sbtn.on{border-color:var(--cy);color:var(--cy);text-shadow:var(--gc);background:rgba(0,245,255,0.06)}
+
+/* BADGES */
+.badge{font-size:10px;padding:2px 7px;border-radius:50px;
+  font-family:'Rajdhani',sans-serif;font-weight:600;letter-spacing:0.5px;text-transform:uppercase}
+.badge.high{background:rgba(255,45,155,0.12);color:#ff6db8;border:0.5px solid rgba(255,45,155,0.3)}
+.badge.mid{background:rgba(255,204,68,0.10);color:#ffd966;border:0.5px solid rgba(255,204,68,0.25)}
+.badge.low{background:rgba(0,245,255,0.08);color:#5de8f0;border:0.5px solid rgba(0,245,255,0.2)}
+.badge.work{background:rgba(180,111,255,0.10);color:#c88fff;border:0.5px solid rgba(180,111,255,0.25)}
+.badge.personal{background:rgba(255,45,155,0.08);color:#ff85c4;border:0.5px solid rgba(255,45,155,0.2)}
+.badge.other{background:rgba(255,255,255,0.05);color:var(--txt2);border:0.5px solid var(--bdr)}
+.badge.today{background:rgba(0,245,255,0.10);color:var(--cy);border:0.5px solid rgba(0,245,255,0.3);text-shadow:var(--gc)}
+.badge.overdue{background:rgba(255,45,155,0.12);color:var(--mg);border:0.5px solid rgba(255,45,155,0.3);text-shadow:var(--gm)}
+
+/* TASK CARDS */
+.icard{background:var(--sur);border:0.5px solid var(--bdr);border-radius:var(--r);
+  padding:11px 12px;margin-bottom:6px;display:flex;align-items:center;gap:10px;
+  position:relative;overflow:hidden;transition:opacity 0.2s}
+.icard::before{content:'';position:absolute;left:0;top:0;bottom:0;width:2px;
+  background:linear-gradient(to bottom,var(--cy),var(--pu));opacity:0.6}
+.icard.done{opacity:0.3}
+.icard.done::before{background:var(--txt3);opacity:1}
+.chkbtn{width:21px;height:21px;border-radius:50%;border:1px solid var(--bdr2);
+  background:none;cursor:pointer;flex-shrink:0;display:flex;align-items:center;
+  justify-content:center;transition:all 0.15s}
+.chkbtn.on{background:var(--cy);border-color:var(--cy);box-shadow:var(--gc)}
+.chkbtn svg{width:10px;height:10px;stroke:#000;stroke-width:2.5;fill:none;display:none}
+.chkbtn.on svg{display:block}
+.ibody{flex:1;min-width:0}
+.itxt{font-size:14px;color:var(--txt);line-height:1.4}
+.icard.done .itxt{text-decoration:line-through;color:var(--txt3)}
+.imeta{display:flex;gap:5px;margin-top:4px;flex-wrap:wrap;align-items:center}
+.delbtn{background:none;border:none;cursor:pointer;color:var(--txt3);padding:5px;
+  border-radius:6px;flex-shrink:0;transition:color 0.15s}
+.delbtn:active{color:var(--mg)}
+.delbtn svg{width:15px;height:15px;stroke:currentColor;stroke-width:1.5;fill:none}
+
+/* SCHED LIST CARDS */
+.scard{background:var(--sur);border:0.5px solid var(--bdr);border-radius:var(--r);
+  padding:11px 12px;margin-bottom:6px;display:flex;align-items:center;gap:12px;
+  position:relative;overflow:hidden}
+.scard::before{content:'';position:absolute;left:0;top:0;bottom:0;width:2px;
+  background:linear-gradient(to bottom,var(--mg),var(--pu));opacity:0.7}
+.sdateblk{flex-shrink:0;width:42px;text-align:center}
+.smon{font-size:10px;color:var(--txt2);font-family:'Share Tech Mono',monospace}
+.sday{font-family:'Rajdhani',sans-serif;font-size:26px;font-weight:700;
+  color:var(--mg);text-shadow:var(--gm);line-height:1}
+.swd{font-size:10px;color:var(--txt3);font-family:'Share Tech Mono',monospace}
+.sdiv{width:0.5px;height:36px;background:var(--bdr2);flex-shrink:0}
+.sbody{flex:1;min-width:0}
+.stxt{font-size:14px;color:var(--txt)}
+.stime{font-size:11px;color:var(--txt2);margin-top:3px;display:flex;gap:6px;
+  align-items:center;font-family:'Share Tech Mono',monospace}
+
+/* ─── CALENDAR ─── */
+.cal-wrap{display:flex;flex-direction:column;gap:12px}
+
+.cal-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
+.cal-month-lbl{font-family:'Rajdhani',sans-serif;font-size:18px;font-weight:700;
+  color:var(--cy);text-shadow:var(--gc);letter-spacing:2px}
+.cal-navbtn{background:none;border:0.5px solid var(--bdr2);border-radius:6px;
+  color:var(--pu);cursor:pointer;padding:4px 12px;font-size:16px;
+  transition:all 0.15s;font-family:'Rajdhani',sans-serif;font-weight:700}
+.cal-navbtn:active{background:rgba(180,111,255,0.12)}
+
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+.cal-dow{text-align:center;font-family:'Share Tech Mono',monospace;font-size:10px;
+  color:var(--txt3);padding:4px 0;letter-spacing:0.5px}
+.cal-dow.sun{color:rgba(255,45,155,0.7)}
+.cal-dow.sat{color:rgba(0,245,255,0.6)}
+
+.cday{min-height:38px;border-radius:8px;display:flex;flex-direction:column;
+  align-items:center;padding:4px 2px;cursor:pointer;position:relative;
+  transition:background 0.15s;border:0.5px solid transparent}
+.cday:active{background:rgba(180,111,255,0.12)}
+.cday.other{opacity:0.25}
+.cday.today .dnum{background:var(--cy);color:#000;text-shadow:none;border-radius:50%;
+  width:24px;height:24px;display:flex;align-items:center;justify-content:center;
+  box-shadow:var(--gc)}
+.cday.sel{background:rgba(180,111,255,0.12);border-color:var(--pu)}
+.cday.sun .dnum{color:rgba(255,45,155,0.85)}
+.cday.sat .dnum{color:rgba(0,245,255,0.8)}
+.dnum{font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:600;color:var(--txt2);line-height:1}
+.evdots{display:flex;gap:2px;margin-top:3px;justify-content:center;flex-wrap:wrap;max-width:28px}
+.evdot{width:5px;height:5px;border-radius:50%;background:var(--mg);box-shadow:var(--gm)}
+
+/* DAY PANEL */
+.daypanel{background:var(--sur);border:0.5px solid var(--bdr2);border-radius:var(--r);
+  overflow:hidden;margin-top:4px}
+.daypanel-hdr{display:flex;align-items:center;justify-content:space-between;
+  padding:10px 14px;border-bottom:0.5px solid var(--bdr);
+  background:linear-gradient(90deg,rgba(180,111,255,0.06),transparent)}
+.daypanel-title{font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:700;
+  color:var(--pu);text-shadow:var(--gp);letter-spacing:1px}
+.daypanel-close{background:none;border:none;color:var(--txt3);cursor:pointer;
+  font-size:16px;padding:2px 6px;border-radius:4px;transition:color 0.15s}
+.daypanel-close:active{color:var(--mg)}
+.dpevent{display:flex;align-items:center;gap:10px;padding:10px 14px;
+  border-bottom:0.5px solid var(--bdr);position:relative}
+.dpevent::before{content:'';position:absolute;left:0;top:0;bottom:0;width:2px;
+  background:linear-gradient(to bottom,var(--mg),var(--pu))}
+.dpevent-body{flex:1;min-width:0}
+.dpevent-txt{font-size:13px;color:var(--txt)}
+.dpevent-time{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--cy);
+  margin-top:2px;text-shadow:var(--gc)}
+.dpempty{padding:14px;text-align:center;font-size:13px;color:var(--txt3);
+  font-family:'Share Tech Mono',monospace}
+
+.empty{text-align:center;padding:2.5rem 1rem;color:var(--txt3);font-size:13px}
+.empty svg{width:30px;height:30px;stroke:var(--txt3);stroke-width:1;fill:none;
+  margin:0 auto 10px;display:block;opacity:0.4}
+
+.botsafe{height:env(safe-area-inset-bottom,16px);flex-shrink:0}
+.content::-webkit-scrollbar{width:2px}
+.content::-webkit-scrollbar-track{background:transparent}
+.content::-webkit-scrollbar-thumb{background:var(--bdr2);border-radius:2px}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="statusbar"></div>
+
+  <div class="header">
+    <div class="header-top">
+      <div class="app-title">KIHITO</div>
+      <div class="date-disp" id="date-disp"></div>
+    </div>
+  </div>
+
+  <div class="sumbar">
+    <div class="sumpill">
+      <div class="val" id="s-todo">0</div>
+      <div class="lbl">残タスク</div>
+    </div>
+    <div class="sumpill p">
+      <div class="val" id="s-today">0</div>
+      <div class="lbl">今日の予定</div>
+    </div>
+    <div class="sumpill d">
+      <div class="val" id="s-over">0</div>
+      <div class="lbl">期限切れ</div>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tbtn on"  onclick="switchTab('tasks')">タスク</button>
+    <button class="tbtn"     onclick="switchTab('calendar')">カレンダー</button>
+    <button class="tbtn"     onclick="switchTab('schedule')">日程リスト</button>
+  </div>
+
+  <div class="content">
+
+    <!-- TASKS -->
+    <div id="sec-tasks" class="sec on">
+      <div class="add-form">
+        <div class="frow">
+          <input type="text" id="task-input" placeholder="タスクを入力..." />
+        </div>
+        <div class="frow">
+          <select id="task-pri" style="flex:1">
+            <option value="high">優先度：高</option>
+            <option value="mid" selected>優先度：中</option>
+            <option value="low">優先度：低</option>
+          </select>
+          <select id="task-cat" style="flex:1">
+            <option value="work">仕事</option>
+            <option value="personal">個人</option>
+            <option value="other">その他</option>
+          </select>
+          <button class="abtn" onclick="addTask()">追加</button>
+        </div>
+      </div>
+      <div class="sortbar">
+        <span class="slbl">SORT:</span>
+        <button class="sbtn on" id="srt-new"  onclick="setSort('new')">新しい順</button>
+        <button class="sbtn"    id="srt-old"  onclick="setSort('old')">古い順</button>
+        <button class="sbtn"    id="srt-pri"  onclick="setSort('pri')">重要度</button>
+        <button class="sbtn"    id="srt-cat"  onclick="setSort('cat')">カテゴリ</button>
+      </div>
+      <div id="task-list"></div>
+    </div>
+
+    <!-- CALENDAR -->
+    <div id="sec-calendar" class="sec">
+      <div class="add-form">
+        <div class="frow">
+          <input type="text" id="cal-sched-input" placeholder="予定を入力..." />
+        </div>
+        <div class="frow">
+          <input type="date" id="cal-sched-date" style="flex:1" />
+          <input type="time" id="cal-sched-time" style="flex:0 0 110px" />
+          <button class="abtn" onclick="addSchedCal()">追加</button>
+        </div>
+      </div>
+      <div class="cal-wrap">
+        <div>
+          <div class="cal-nav">
+            <button class="cal-navbtn" onclick="calMove(-1)">‹</button>
+            <span class="cal-month-lbl" id="cal-lbl"></span>
+            <button class="cal-navbtn" onclick="calMove(1)">›</button>
+          </div>
+          <div class="cal-grid" id="cal-grid"></div>
+        </div>
+        <div id="day-panel"></div>
+      </div>
+    </div>
+
+    <!-- SCHEDULE LIST -->
+    <div id="sec-schedule" class="sec">
+      <div class="add-form">
+        <div class="frow">
+          <input type="text" id="sched-input" placeholder="予定を入力..." />
+        </div>
+        <div class="frow">
+          <input type="date" id="sched-date" style="flex:1" />
+          <input type="time" id="sched-time" style="flex:0 0 110px" />
+          <button class="abtn" onclick="addSched()">追加</button>
+        </div>
+      </div>
+      <div id="sched-list"></div>
+    </div>
+
+  </div>
+  <div class="botsafe"></div>
+</div>
+
+<script>
+const KT = 'kihito_tasks', KS = 'kihito_scheds';
+let tasks=[], scheds=[], sortMode='new', currentTab='tasks';
+let calYear, calMonth, selDate=null;
+
+const NOW = new Date(); NOW.setHours(0,0,0,0);
+const todayVal = NOW.toISOString().split('T')[0];
+calYear = NOW.getFullYear(); calMonth = NOW.getMonth();
+
+const WDAYS  = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
+const WDAYSJP= ['日','月','火','水','木','金','土'];
+const MONTHS = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+const PLAB   = {high:'HIGH',mid:'MID',low:'LOW'};
+const CLAB   = {work:'仕事',personal:'個人',other:'その他'};
+const PRIOR  = {high:0,mid:1,low:2};
+
+// Date header
+document.getElementById('date-disp').innerHTML =
+  NOW.getFullYear()+'.'+String(NOW.getMonth()+1).padStart(2,'0')+'.'+String(NOW.getDate()).padStart(2,'0')+'<br>'+WDAYS[NOW.getDay()];
+
+// ── STORAGE ────────────────────────────────────────────────────────
+function save(){
+  localStorage.setItem(KT, JSON.stringify(tasks));
+  localStorage.setItem(KS, JSON.stringify(scheds));
+}
+function load(){
+  try{const t=localStorage.getItem(KT);if(t)tasks=JSON.parse(t);}catch(e){}
+  try{const s=localStorage.getItem(KS);if(s)scheds=JSON.parse(s);}catch(e){}
+  renderAll();
+}
+
+// ── TABS ───────────────────────────────────────────────────────────
+function switchTab(t){
+  currentTab=t;
+  ['tasks','calendar','schedule'].forEach((id,i)=>{
+    document.querySelectorAll('.tbtn')[i].classList.toggle('on',id===t);
+    document.getElementById('sec-'+id).classList.toggle('on',id===t);
+  });
+  if(t==='calendar') renderCalendar();
+}
+
+// ── SORT ───────────────────────────────────────────────────────────
+function setSort(m){
+  sortMode=m;
+  ['new','old','pri','cat'].forEach(k=>{
+    document.getElementById('srt-'+k).classList.toggle('on',k===m);
+  });
+  renderTasks();
+}
+
+function sortedTasks(){
+  const active=tasks.filter(x=>!x.done);
+  const done  =tasks.filter(x=>x.done);
+  const fn={
+    new: (a,b)=>b.id-a.id,
+    old: (a,b)=>a.id-b.id,
+    pri: (a,b)=>PRIOR[a.priority]-PRIOR[b.priority]||b.id-a.id,
+    cat: (a,b)=>a.cat.localeCompare(b.cat)||PRIOR[a.priority]-PRIOR[b.priority]
+  }[sortMode]||(a,b)=>b.id-a.id;
+  return [...active.sort(fn),...done];
+}
+
+// ── TASKS ──────────────────────────────────────────────────────────
+function addTask(){
+  const v=document.getElementById('task-input').value.trim();
+  if(!v)return;
+  tasks.unshift({id:Date.now(),text:v,priority:document.getElementById('task-pri').value,
+    cat:document.getElementById('task-cat').value,done:false});
+  document.getElementById('task-input').value='';
+  save();renderAll();
+}
+function toggleTask(id){const t=tasks.find(x=>x.id===id);if(t)t.done=!t.done;save();renderAll();}
+function deleteTask(id){tasks=tasks.filter(x=>x.id!==id);save();renderAll();}
+
+function renderTasks(){
+  const el=document.getElementById('task-list');
+  const sorted=sortedTasks();
+  if(!sorted.length){
+    el.innerHTML=`<div class="empty"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>タスクなし</div>`;
+    return;
+  }
+  el.innerHTML=sorted.map(t=>`
+    <div class="icard${t.done?' done':''}">
+      <button class="chkbtn${t.done?' on':''}" onclick="toggleTask(${t.id})">
+        <svg viewBox="0 0 12 10"><polyline points="1,5 4,8 11,1"/></svg>
+      </button>
+      <div class="ibody">
+        <div class="itxt">${t.text}</div>
+        <div class="imeta">
+          <span class="badge ${t.priority}">${PLAB[t.priority]}</span>
+          <span class="badge ${t.cat}">${CLAB[t.cat]}</span>
+        </div>
+      </div>
+      <button class="delbtn" onclick="deleteTask(${t.id})">
+        <svg viewBox="0 0 24 24"><polyline points="3,6 5,6 21,6"/><path d="M19,6l-1,14H6L5,6"/><path d="M10,11v6M14,11v6"/><path d="M9,6V4h6v2"/></svg>
+      </button>
+    </div>`).join('');
+}
+
+// ── SCHEDULE (add shared) ──────────────────────────────────────────
+function _addSched(text,date,time){
+  if(!text||!date)return false;
+  scheds.push({id:Date.now(),text,date,time});
+  scheds.sort((a,b)=>a.date.localeCompare(b.date)||(a.time||'').localeCompare(b.time||''));
+  save();renderAll();
+  if(currentTab==='calendar'){selDate=date;renderCalendar();}
+  return true;
+}
+function addSched(){
+  const ok=_addSched(
+    document.getElementById('sched-input').value.trim(),
+    document.getElementById('sched-date').value,
+    document.getElementById('sched-time').value
+  );
+  if(ok){
+    document.getElementById('sched-input').value='';
+    document.getElementById('sched-date').value='';
+    document.getElementById('sched-time').value='';
+  }
+}
+function addSchedCal(){
+  const ok=_addSched(
+    document.getElementById('cal-sched-input').value.trim(),
+    document.getElementById('cal-sched-date').value,
+    document.getElementById('cal-sched-time').value
+  );
+  if(ok){
+    document.getElementById('cal-sched-input').value='';
+    document.getElementById('cal-sched-date').value='';
+    document.getElementById('cal-sched-time').value='';
+  }
+}
+function deleteSched(id){scheds=scheds.filter(x=>x.id!==id);save();renderAll();if(currentTab==='calendar')renderCalendar();}
+
+// ── SCHEDULE LIST ──────────────────────────────────────────────────
+function renderScheduleList(){
+  const el=document.getElementById('sched-list');
+  if(!scheds.length){
+    el.innerHTML=`<div class="empty"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>予定なし</div>`;
+    return;
+  }
+  el.innerHTML=scheds.map(s=>{
+    const d=new Date(s.date+'T00:00:00');
+    const isToday=s.date===todayVal, isOver=s.date<todayVal;
+    return `<div class="scard">
+      <div class="sdateblk">
+        <div class="smon">${String(d.getMonth()+1).padStart(2,'0')}月</div>
+        <div class="sday">${d.getDate()}</div>
+        <div class="swd">${WDAYS[d.getDay()]}</div>
+      </div>
+      <div class="sdiv"></div>
+      <div class="sbody">
+        <div class="stxt">${s.text}</div>
+        <div class="stime">
+          ${s.time?'<span>'+s.time+'</span>':''}
+          ${isToday?'<span class="badge today">TODAY</span>':isOver?'<span class="badge overdue">OVERDUE</span>':''}
+        </div>
+      </div>
+      <button class="delbtn" onclick="deleteSched(${s.id})">
+        <svg viewBox="0 0 24 24"><polyline points="3,6 5,6 21,6"/><path d="M19,6l-1,14H6L5,6"/><path d="M10,11v6M14,11v6"/><path d="M9,6V4h6v2"/></svg>
+      </button>
+    </div>`;
+  }).join('');
+}
+
+// ── CALENDAR ───────────────────────────────────────────────────────
+function calMove(dir){
+  calMonth+=dir;
+  if(calMonth<0){calMonth=11;calYear--;}
+  if(calMonth>11){calMonth=0;calYear++;}
+  selDate=null;
+  renderCalendar();
+}
+
+function renderCalendar(){
+  document.getElementById('cal-lbl').textContent=calYear+'年 '+MONTHS[calMonth];
+
+  const firstDow = new Date(calYear,calMonth,1).getDay();
+  const daysInMon= new Date(calYear,calMonth+1,0).getDate();
+  const daysInPrev=new Date(calYear,calMonth,0).getDate();
+
+  // group events by date
+  const evMap={};
+  scheds.forEach(s=>{
+    if(!evMap[s.date])evMap[s.date]=[];
+    evMap[s.date].push(s);
+  });
+
+  let html='';
+  // DOW headers
+  ['日','月','火','水','木','金','土'].forEach((d,i)=>{
+    html+=`<div class="cal-dow${i===0?' sun':i===6?' sat':''}">${d}</div>`;
+  });
+
+  // prev month filler
+  for(let i=firstDow-1;i>=0;i--){
+    html+=`<div class="cday other"><span class="dnum">${daysInPrev-i}</span></div>`;
+  }
+
+  // current month
+  for(let d=1;d<=daysInMon;d++){
+    const ds=calYear+'-'+String(calMonth+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+    const dow=new Date(ds+'T00:00:00').getDay();
+    const isToday=ds===todayVal, isSel=ds===selDate;
+    const evs=evMap[ds]||[];
+    let cls='cday';
+    if(dow===0)cls+=' sun';
+    if(dow===6)cls+=' sat';
+    if(isToday)cls+=' today';
+    if(isSel)cls+=' sel';
+    const dots=evs.slice(0,3).map(()=>'<div class="evdot"></div>').join('');
+    html+=`<div class="${cls}" onclick="selectDay('${ds}')">
+      <span class="dnum">${d}</span>
+      ${dots?'<div class="evdots">'+dots+'</div>':''}
+    </div>`;
+  }
+
+  // next month filler
+  const total=firstDow+daysInMon;
+  const rest=total%7===0?0:7-(total%7);
+  for(let d=1;d<=rest;d++){
+    html+=`<div class="cday other"><span class="dnum">${d}</span></div>`;
+  }
+
+  document.getElementById('cal-grid').innerHTML=html;
+  renderDayPanel();
+}
+
+function selectDay(ds){
+  selDate=selDate===ds?null:ds;
+  renderCalendar();
+}
+
+function renderDayPanel(){
+  const el=document.getElementById('day-panel');
+  if(!selDate){el.innerHTML='';return;}
+  const d=new Date(selDate+'T00:00:00');
+  const lbl=d.getFullYear()+'年'+(d.getMonth()+1)+'月'+d.getDate()+'日（'+WDAYSJP[d.getDay()]+'）';
+  const evs=scheds.filter(s=>s.date===selDate).sort((a,b)=>(a.time||'').localeCompare(b.time||''));
+  const inner=!evs.length
+    ?'<div class="dpempty">予定なし</div>'
+    :evs.map(s=>`<div class="dpevent">
+        <div class="dpevent-body">
+          <div class="dpevent-txt">${s.text}</div>
+          ${s.time?'<div class="dpevent-time">'+s.time+'</div>':''}
+        </div>
+        <button class="delbtn" onclick="deleteSched(${s.id})">
+          <svg viewBox="0 0 24 24"><polyline points="3,6 5,6 21,6"/><path d="M19,6l-1,14H6L5,6"/><path d="M10,11v6M14,11v6"/><path d="M9,6V4h6v2"/></svg>
+        </button>
+      </div>`).join('');
+  el.innerHTML=`<div class="daypanel">
+    <div class="daypanel-hdr">
+      <span class="daypanel-title">${lbl}</span>
+      <button class="daypanel-close" onclick="selDate=null;renderCalendar()">✕</button>
+    </div>
+    ${inner}
+  </div>`;
+}
+
+// ── SUMMARY ────────────────────────────────────────────────────────
+function updateSummary(){
+  document.getElementById('s-todo').textContent =tasks.filter(x=>!x.done).length;
+  document.getElementById('s-today').textContent=scheds.filter(x=>x.date===todayVal).length;
+  document.getElementById('s-over').textContent =scheds.filter(x=>x.date<todayVal).length;
+}
+
+function renderAll(){
+  renderTasks();
+  renderScheduleList();
+  updateSummary();
+  if(currentTab==='calendar')renderCalendar();
+}
+
+// ── EVENTS ─────────────────────────────────────────────────────────
+document.getElementById('task-input').addEventListener('keydown',e=>{if(e.key==='Enter')addTask();});
+document.getElementById('sched-input').addEventListener('keydown',e=>{if(e.key==='Enter')addSched();});
+document.getElementById('cal-sched-input').addEventListener('keydown',e=>{if(e.key==='Enter')addSchedCal();});
+
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+
+load();
+</script>
+</body>
+</html>
